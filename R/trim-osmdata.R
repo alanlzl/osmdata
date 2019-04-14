@@ -163,68 +163,74 @@ get_trim_indx <- function (g, bb, exclude)
 
 trim_to_poly <- function (dat, bb_poly, exclude = TRUE)
 {
-    if (is (dat$osm_lines, 'sf'))
+  if (is(dat$osm_lines, 'sf') || is(dat$osm_polygons, 'sf'))
+  {
+    gnms <- c ("osm_lines", "osm_polygons")
+    for (g in gnms)
     {
-        gnms <- c ("osm_lines", "osm_polygons")
-        for (g in gnms)
+      if (!is.null(dat[[g]])) 
+      {
+        if (nrow(dat[[g]]) > 0) 
         {
-            if (nrow (dat [[g]]) > 0)
-            {
-                indx <- get_trim_indx (dat [[g]]$geometry, bb_poly,
-                                       exclude = exclude)
-                #cl <- class (dat [[g]]$geometry) # TODO: Delete
-                attrs <- attributes (dat [[g]])
-                attrs$row.names <- attrs$row.names [indx]
-                attrs_g <- attributes (dat [[g]]$geometry)
-                attrs_g$names <- attrs_g$names [indx]
-                dat [[g]] <- dat [[g]] [indx, ] # this strips sf class defs
-                #class (dat [[g]]$geometry) <- cl # TODO: Delete
-                attributes (dat [[g]]) <- attrs
-                attributes (dat [[g]]$geometry) <- attrs_g
-            }
+          indx <- get_trim_indx (dat [[g]]$geometry, bb_poly,
+                                 exclude = exclude)
+          #cl <- class (dat [[g]]$geometry) # TODO: Delete
+          attrs <- attributes (dat [[g]])
+          attrs$row.names <- attrs$row.names [indx]
+          attrs_g <- attributes (dat [[g]]$geometry)
+          attrs_g$names <- attrs_g$names [indx]
+          dat [[g]] <- dat [[g]] [indx, ] # this strips sf class defs
+          #class (dat [[g]]$geometry) <- cl # TODO: Delete
+          attributes (dat [[g]]) <- attrs
+          attributes (dat [[g]]$geometry) <- attrs_g
         }
-    }
-
-    return (dat)
+      }
+        
+      }
+  }
+  return (dat)
 }
 
 trim_to_poly_multi <- function (dat, bb_poly, exclude = TRUE)
 {
-    if (is (dat$osm_multilines, 'sf'))
+  if (is(dat$osm_multilines, 'sf') || is(dat$osm_multipolygons, 'sf'))
+  {
+    gnms <- c ("osm_multilines", "osm_multipolygons")
+    for (g in gnms)
     {
-        gnms <- c ("osm_multilines", "osm_multipolygons")
-        for (g in gnms)
+      if (!is.null(dat[[g]])) 
+      {
+        if (nrow (dat[[g]]) > 0) 
         {
-            if (nrow (dat [[g]]) > 0)
-            {
-                if (g == "osm_multilines")
-                    indx <- lapply (dat [[g]]$geometry, function (gi)
-                                    get_trim_indx (g = gi, bb = bb_poly,
-                                                   exclude = exclude))
-                else
-                    indx <- lapply (dat [[g]]$geometry, function (gi)
-                                    get_trim_indx (g = gi [[1]], bb = bb_poly,
-                                                   exclude = exclude))
-                ilens <- vapply (indx, length, 1L, USE.NAMES = FALSE)
-                glens <- vapply (dat [[g]]$geometry, length,
-                                 1L, USE.NAMES = FALSE)
-                if (exclude)
-                    indx <- which (ilens == glens)
-                else
-                    indx <- which (ilens > 0)
-
-                #cl <- class (dat [[g]]$geometry) # TODO: Delete
-                attrs <- attributes (dat [[g]])
-                attrs$row.names <- attrs$row.names [indx]
-                attrs_g <- attributes (dat [[g]]$geometry)
-                attrs_g$names <- attrs_g$names [indx]
-                dat [[g]] <- dat [[g]] [indx, ]
-                #class (dat [[g]]$geometry) <- cl # TODO: Delete
-                attributes (dat [[g]]) <- attrs
-                attributes (dat [[g]]$geometry) <- attrs_g
-            }
+          if (g == "osm_multilines")
+            indx <- lapply (dat [[g]]$geometry, function (gi)
+              get_trim_indx (g = gi, bb = bb_poly,
+                             exclude = exclude))
+          else
+            indx <- lapply (dat [[g]]$geometry, function (gi)
+              get_trim_indx (g = gi [[1]], bb = bb_poly,
+                             exclude = exclude))
+          ilens <- vapply (indx, length, 1L, USE.NAMES = FALSE)
+          glens <- vapply (dat [[g]]$geometry, length,
+                           1L, USE.NAMES = FALSE)
+          if (exclude)
+            indx <- which (ilens == glens)
+          else
+            indx <- which (ilens > 0)
+          
+          #cl <- class (dat [[g]]$geometry) # TODO: Delete
+          attrs <- attributes (dat [[g]])
+          attrs$row.names <- attrs$row.names [indx]
+          attrs_g <- attributes (dat [[g]]$geometry)
+          attrs_g$names <- attrs_g$names [indx]
+          dat [[g]] <- dat [[g]] [indx, ]
+          #class (dat [[g]]$geometry) <- cl # TODO: Delete
+          attributes (dat [[g]]) <- attrs
+          attributes (dat [[g]]$geometry) <- attrs_g
         }
+      }
     }
-
-    return (dat)
+  }
+  
+  return (dat)
 }
